@@ -84,6 +84,7 @@ public class PlayerManager : MonoBehaviour {
         yPosList = new List<float>();
 
         // Game object setting.
+        scoreText.text = "";
         centre.SetActive(false);
         leftGoal.SetActive(false);
         rightGoal.SetActive(false);
@@ -193,12 +194,16 @@ public class PlayerManager : MonoBehaviour {
         writerLME.WriteLine("Trial " + trialIndex.ToString() + ": Left move ended.");
         writerLME.Close();
 
-        // Rest for 6 seconds.
+        // Calculate and display score. Rest for 6 seconds. Clear score.
         for (int i = 0; i < idealXList.Count; i++)
         {
              scoreList.Add(Mathf.Sqrt(Mathf.Pow((Mathf.Abs(idealXList[i] - xPosList[i])), 2) + Mathf.Pow(Mathf.Abs(yPosList[i]), 2)));
         }
-        score = scoreList.Sum();
+        score = 1000 - scoreList.Sum();
+        if (score < 0.0f)
+        {
+            score = 0.0f;
+        }
         scoreText.text = score.ToString();
         yield return new WaitForSeconds(6);
         scoreText.text = "";
@@ -243,12 +248,16 @@ public class PlayerManager : MonoBehaviour {
         writerRME.WriteLine("Trial " + trialIndex.ToString() + ": Right move ended.");
         writerRME.Close();
 
-        // Rest for 6 seconds.
+        // Calculate and display score. Rest for 6 seconds. Clear score.
         for (int i = 0; i < idealXList.Count; i++)
         {
             scoreList.Add(Mathf.Sqrt(Mathf.Pow((Mathf.Abs(idealXList[i] - xPosList[i])), 2) + Mathf.Pow(Mathf.Abs(yPosList[i]), 2)));
         }
-        score = scoreList.Sum();
+        score = 1000 - scoreList.Sum();
+        if (score < 0.0f)
+        {
+            score = 0.0f;
+        }
         scoreText.text = score.ToString();
         yield return new WaitForSeconds(6);
         scoreText.text = "";
