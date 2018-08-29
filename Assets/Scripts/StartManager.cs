@@ -10,6 +10,14 @@ public class StartManager : MonoBehaviour {
     public InputField ageField;
     public Toggle maleToggle;
     public Toggle femaleToggle;
+    public GameObject helpMenu;
+    public GameObject registrationMenu;
+
+    void Start ()
+    {
+        helpMenu.SetActive(false);
+        registrationMenu.SetActive(false);
+    }
 
     public void InputGender()
     {
@@ -22,13 +30,6 @@ public class StartManager : MonoBehaviour {
         {
             PlayerPrefs.SetString("Gender", "F");
         }
-
-        Debug.Log(PlayerPrefs.GetString("Gender"));
-    }
-
-    public void InputMaleGender()
-    {
-
     }
 
     public void InputAge()
@@ -43,7 +44,6 @@ public class StartManager : MonoBehaviour {
 
     public void QuitGame ()
     {
-        Debug.Log("Quit.");
         Application.Quit();
     }
 }
