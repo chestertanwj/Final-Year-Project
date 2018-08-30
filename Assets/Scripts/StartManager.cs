@@ -13,10 +13,15 @@ public class StartManager : MonoBehaviour {
     public GameObject helpMenu;
     public GameObject registrationMenu;
 
+    public CortexManager cm;
+
     void Start ()
     {
         helpMenu.SetActive(false);
         registrationMenu.SetActive(false);
+
+        cm = new CortexManager();
+        // cm.Init();
     }
 
     public void InputGender()

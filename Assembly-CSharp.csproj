@@ -65,6 +65,7 @@
     <Compile Include="Assets\Packages\OptiTrack\Plugins\Managed\NatNetLib\Native.cs" />
     <Compile Include="Assets\Packages\OptiTrack\Scripts\OptitrackHmd.cs" />
     <Compile Include="Assets\Packages\OptiTrack\Scripts\OptitrackSkeletonAnimator.cs" />
+    <Compile Include="Assets\Scripts\CortexManager.cs" />
     <Compile Include="Assets\Scripts\OptitrackRigidBody.cs" />
     <Compile Include="Assets\Scripts\OptitrackStreamingClient.cs" />
     <Compile Include="Assets\Scripts\PlayerManager.cs" />
