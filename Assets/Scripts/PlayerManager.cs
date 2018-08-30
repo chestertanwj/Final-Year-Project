@@ -52,8 +52,9 @@ public class PlayerManager : MonoBehaviour {
     void Start ()
     {
         // Mocap data writing.
-        fileName = DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + ".csv";
-        fileLocation = @"C:\Users\Chester\Desktop\";
+        fileName = "OptiTrack_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + ".csv";
+        // fileLocation = @"C:\Users\Chester\Desktop\";
+        fileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
         filePath = fileLocation + fileName;
         WriteHeader();
 
