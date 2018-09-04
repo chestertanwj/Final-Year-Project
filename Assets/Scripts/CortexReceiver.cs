@@ -1,15 +1,11 @@
-﻿using System.IO;
-using UnityEngine;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using System.Threading;
+﻿using System;
+using System.Collections;
+using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections;
+using UnityEngine;
+
+// Polling to receive only responses from authorization, subscription and streaming.
 
 public class CortexReceiver : MonoBehaviour {
 
@@ -23,10 +19,9 @@ public class CortexReceiver : MonoBehaviour {
 
     string fileName;
     string fileLocation;
-    string filePath;
+    public string filePath;
 
     public string token;
-    public string headset_id;
 
     public IEnumerator Init ()
     {
@@ -34,74 +29,65 @@ public class CortexReceiver : MonoBehaviour {
 
         // EEG data writing.
         fileName = "Emotiv_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + ".csv";
-        // fileLocation = @"C:\Users\Chester\Desktop\";
         fileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
         filePath = fileLocation + fileName;
-        
-        // yield return new WaitForSeconds(0.2f);
+
+        Debug.Log("Fetch websocket from WebSocketManager to CortexReceiver.");
         ws = WebSocketManager.GetComponent<WebSocketManager>().ws;
 
         while (true)
         {
-            // Debug.Log("CortexReceiver loop start.");
             response = ws.RecvString();
+
             if (response != null)
             {
-                Debug.Log("There is a response.");
                 Jresponse = JObject.Parse(response);
-                Debug.Log("Jresponse: " + Jresponse.ToString(Formatting.None));
+                Debug.Log("Response: " + Jresponse.ToString(Formatting.None));
 
                 // Response from Authorize() request.
-                // Getting authentication token.
-                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 3)
+                // Get authentication token.
+                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 2)
                 {
                     token = Jresponse["result"]["_auth"].ToString();
                 }
 
-                // Response from QueryHeadsets() request.
-                // Getting headset id.
+                // Response from Subscribe() request.
                 if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 4)
                 {
-                    headset_id = Jresponse["result"][0]["id"].ToString();
+                    WriteHeader();
                 }
 
-                // Response from Subscribe() request.
-                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 6)
-                {
-                    TextWriter writer = new StreamWriter(filePath, false);
-                    for (int i = 0; i < 18; i++)
-                    {
-                        writer.Write(Jresponse["result"][0]["eeg"]["cols"][i].ToString() + ",");
-                    }
-                    writer.WriteLine();
-                    writer.Close();
-                }
-
-                // Handling streaming EEG data.
+                // Handle streaming EEG data.
                 if (!Jresponse.ToString().Contains("result") && Jresponse.ToString().Contains("eeg"))
                 {
-                    TextWriter writer = new StreamWriter(filePath, true);
-                    for (int i = 0; i < 18; i++)
-                    {
-                        writer.Write(Jresponse["eeg"][i].ToString() + ",");
-                    }
-                    writer.WriteLine();
-                    writer.Close();
-                }
-
-                // Response from QuerySessions() request.
-                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 7)
-                {
-                    string file = @"C:\Users\nrobinson\Desktop\Chester\QuerySessions.txt";
-
-                    TextWriter writer = new StreamWriter(file, false);
-                    writer.WriteLine(response.ToString());
-                    writer.Close();
+                    WriteData();
                 }
             }
-            
-            // Debug.Log("CortexReceiver loop end");
             yield return null;
         }
+    }
+
+    void WriteHeader ()
+    {
+        TextWriter writer = new StreamWriter(filePath, false);
+        writer.Write("TIME,FRAME,");
+        for (int i = 4; i < 17; i++)
+        {
+            writer.Write(Jresponse["result"][0]["eeg"]["cols"][i].ToString() + ",");
+        }
+        writer.Write("EVENT,");
+        writer.Close();
+    }
+
+    void WriteData ()
+    {
+        TextWriter writer = new StreamWriter(filePath, true);
+        writer.WriteLine("");
+        writer.Write(Time.time + "," + Time.frameCount + ",");
+        for (int i = 4; i < 17; i++)
+        {
+            writer.Write(Jresponse["eeg"][i].ToString() + ",");
+        }
+        writer.Close();
     }
 }

@@ -11,9 +11,14 @@ public class OptitrackRigidBody : MonoBehaviour
     public OptitrackStreamingClient StreamingClient;
     public Int32 RigidBodyId;
 
+    // Factor used to amplify rigidbody movement in Unity.
+    private float ampFactor;
 
     void Start()
     {
+        // Amplification factor value.
+        ampFactor = 100.0f;
+
         // If the user didn't explicitly associate a client, find a suitable default.
         if ( this.StreamingClient == null )
         {
@@ -61,7 +66,11 @@ public class OptitrackRigidBody : MonoBehaviour
         OptitrackRigidBodyState rbState = StreamingClient.GetLatestRigidBodyState( RigidBodyId );
         if ( rbState != null )
         {
-            this.transform.localPosition = rbState.Pose.Position * 100.0f;
+            // Fix Unity rigidbody in z-plane.
+            rbState.Pose.Position.z = 0.0f;
+
+            // Amplify Unity rigidbody movement.
+            this.transform.localPosition = rbState.Pose.Position * ampFactor;
             this.transform.localRotation = rbState.Pose.Orientation;
         }
     }

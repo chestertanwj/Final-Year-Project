@@ -1601,7 +1601,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26f39a06aba3f504498ee1a3f3ec8ef3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  test: {fileID: 0}
+  WebSocketManager: {fileID: 0}
+  CortexReceiver: {fileID: 0}
 --- !u!1 &948045128
 GameObject:
   m_ObjectHideFlags: 0
@@ -4348,7 +4349,7 @@ MonoBehaviour:
     2. Each session consists of 20 trials, 10 will be to the left and 10 will be to
     the right but their order is random.
 
-    3. There will be a 10s rest before the 1st trial begins.
+    3. There will be 25s of rest/loading before the 1st trial begins.
 
     4. Each trial consists of a 5s preparation phase, 5s move phase and 6s rest phase.
 
@@ -4356,11 +4357,11 @@ MonoBehaviour:
     circle.
 
     6. During the move phase, a white line will grow towards a green goal. Move the
-    ball such that it follows the edge of the line. If done perfectly, the red ball
+    ball such that it follows the edge of the line. If done properly, the red ball
     will end over the green goal.
 
-    7. During the rest phase, your score for the trial will be displayed. The lower
-    the score, the better.
+    7. During the rest phase, your score for the trial will be displayed. The score
+    ranges from 0 to 1000.
 
     8. A new trial will begin automatically after the old trial ends.'
   m_isRightToLeft: 0
@@ -4431,10 +4432,10 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_textInfo:
     textComponent: {fileID: 2111006173}
-    characterCount: 769
+    characterCount: 777
     spriteCount: 0
-    spaceCount: 149
-    wordCount: 150
+    spaceCount: 150
+    wordCount: 152
     linkCount: 0
     lineCount: 9
     pageCount: 1

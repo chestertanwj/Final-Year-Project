@@ -7,13 +7,11 @@ using UnityEngine;
 // Minimal Cortex Workflow: logout, login, authenticate/authorize, create session, subscribe.
 
 // Request IDs
+// Logout:          0
 // Login:           1
-// Logout:          2
-// Authorize:       3
-// QueryHeadsets:   4
-// CreateSession:   5
-// Subscribe:       6
-// QuerySessions:   7
+// Authorize:       2
+// CreateSession:   3
+// Subscribe:       4
 
 public class CortexSender : MonoBehaviour {
 
@@ -40,21 +38,16 @@ public class CortexSender : MonoBehaviour {
         client_id = "sw37ALQ0sEXese8dA723pqracKIy49OSsYpCWezQ";
         client_secret = "Yt3BC6hXbJTwDneJOEjaXu2Q8rBEtjZsKG6Ria2E2rkTUUq795Uk0vroszf54J6OFoVHWfio8q8wJEUfyhaUoujCDDkrUHBjvW7xpEg5krg7wXofxu4Nxm5ouQGXdo6Y";
 
-        Debug.Log("Fetching websocket from WebSocketManager.");
+        Debug.Log("Fetch websocket from WebSocketManager to CortexSender.");
         ws = WebSocketManager.GetComponent<WebSocketManager>().ws;
-        Debug.Log("Websocket from WebSocketManager fetched.");
-
-        Debug.Log("Calling CortexReceiver.Init() coroutine.");
-        StartCoroutine(CortexReceiver.GetComponent<CortexReceiver>().Init());
-        Debug.Log("CortexReceiver.Init() coroutine called.");
 
         Logout();
         yield return new WaitForSeconds(5);
         Login();
         yield return new WaitForSeconds(5);
         Authorize();
-        token = CortexReceiver.GetComponent<CortexReceiver>().token;
         yield return new WaitForSeconds(5);
+        token = CortexReceiver.GetComponent<CortexReceiver>().token;
         CreateSession();
         yield return new WaitForSeconds(5);
         Subscribe();
@@ -103,7 +96,7 @@ public class CortexSender : MonoBehaviour {
         param.Add(username);
         request.Add("params", param);
 
-        JProperty id = new JProperty("id", 2);
+        JProperty id = new JProperty("id", 0);
         request.Add(id);
 
         Debug.Log(request.ToString(Formatting.None));
@@ -130,7 +123,7 @@ public class CortexSender : MonoBehaviour {
         param.Add(client_id);
         request.Add("params", param);
 
-        JProperty id = new JProperty("id", 3);
+        JProperty id = new JProperty("id", 2);
         request.Add(id);
 
         Debug.Log(request.ToString(Formatting.None));
@@ -155,7 +148,7 @@ public class CortexSender : MonoBehaviour {
         param.Add(status);
         request.Add("params", param);
 
-        JProperty id = new JProperty("id", 5);
+        JProperty id = new JProperty("id", 3);
         request.Add(id);
 
         Debug.Log(request.ToString(Formatting.None));
@@ -182,7 +175,7 @@ public class CortexSender : MonoBehaviour {
         param.Add(streams);
         request.Add("params", param);
 
-        JProperty id = new JProperty("id", 6);
+        JProperty id = new JProperty("id", 4);
         request.Add(id);
 
         Debug.Log(request.ToString(Formatting.None));

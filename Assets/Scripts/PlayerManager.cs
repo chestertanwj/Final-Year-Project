@@ -1,17 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-
-using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using UnityEditor;
+using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerManager : MonoBehaviour {
 
     public GameObject player;
+    public GameObject CortexReceiver;
 
     public GameObject centre;
     public GameObject leftGoal;
@@ -45,6 +44,9 @@ public class PlayerManager : MonoBehaviour {
     private string fileLocation;
     private string filePath;
 
+    // EEG data writing.
+    string eegfilePath;
+
     // Debug.
     public Camera mainCamera;
 
@@ -53,16 +55,17 @@ public class PlayerManager : MonoBehaviour {
     {
         // Mocap data writing.
         fileName = "OptiTrack_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + ".csv";
-        // fileLocation = @"C:\Users\Chester\Desktop\";
         fileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
         filePath = fileLocation + fileName;
         WriteHeader();
 
-        // Trial management.
+        // Initial rest/loading phase.
         initRestOver = false;
         StartCoroutine(InitRest());
+
+        // Trial management.
         trialIndex = 1;
-        trialTotal = 20;
+        trialTotal = 10;
         trialActive = false;
         moveActive = false;
         trialList = new List<int>();
@@ -85,7 +88,6 @@ public class PlayerManager : MonoBehaviour {
         yPosList = new List<float>();
 
         // Game object setting.
-        scoreText.text = "";
         centre.SetActive(false);
         leftGoal.SetActive(false);
         rightGoal.SetActive(false);
@@ -126,23 +128,29 @@ public class PlayerManager : MonoBehaviour {
         // End session.
         if (trialIndex == trialTotal)
         {
-            // Load End Scene.
+            scoreText.text = "END THANK YOU";
         }
 
-        // Quit application.
+        // Return to start.
         if (Input.GetKey(KeyCode.Escape))
         {
-            Application.Quit();
+            SceneManager.LoadScene("Start");
         }
 
         // Debug.
-        player.transform.position = mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 20.0f));
+        // player.transform.position = mainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 20.0f));
     }
 
     IEnumerator InitRest ()
     {
-        yield return new WaitForSeconds(10);
+        scoreText.text = "LOADING";
+        yield return new WaitForSeconds(20);
+        scoreText.text = "LOADED";
+        yield return new WaitForSeconds(5);
+        scoreText.text = "";
         initRestOver = true;
+
+        eegfilePath = CortexReceiver.GetComponent<CortexReceiver>().filePath;
     }
 
     IEnumerator Trial ()
@@ -167,14 +175,17 @@ public class PlayerManager : MonoBehaviour {
 
     IEnumerator LeftMove ()
     {
-        // Start left move.
+        // Start left move. Mark event in mocap data and EEG data.
         leftGoal.SetActive(true);
         leftLine.SetActive(true);
         leftMask.SetActive(true);
         moveActive = true;
         TextWriter writerLMS = new StreamWriter(filePath, true);
-        writerLMS.WriteLine("Trial " + trialIndex.ToString() + ": Left move started.");
+        writerLMS.Write("TRIAL " + trialIndex.ToString() + " LEFT START");
         writerLMS.Close();
+        TextWriter writerEEGLMS = new StreamWriter(eegfilePath, true);
+        writerEEGLMS.Write("TRIAL " + trialIndex.ToString() + " LEFT START");
+        writerEEGLMS.Close();
 
         // Move left mask to reveal left line for ~5.333... seconds.
         while (leftMask.transform.position.x > -24.5f)
@@ -186,33 +197,22 @@ public class PlayerManager : MonoBehaviour {
         // Reset left mask position.
         leftMask.transform.position = new Vector3(-8.5f, 0.0f, 0.0f);
 
-        // End left move.
+        // End left move. Mark event in mocap data and EEG data.
         leftGoal.SetActive(false);
         leftLine.SetActive(false);
         leftMask.SetActive(false);
         moveActive = false;
         TextWriter writerLME = new StreamWriter(filePath, true);
-        writerLME.WriteLine("Trial " + trialIndex.ToString() + ": Left move ended.");
+        writerLME.Write("TRIAL " + trialIndex.ToString() + " LEFT END");
         writerLME.Close();
+        TextWriter writerEEGLME = new StreamWriter(eegfilePath, true);
+        writerEEGLME.Write("TRIAL " + trialIndex.ToString() + " LEFT END");
+        writerEEGLME.Close();
 
-        // Calculate and display score. Rest for 6 seconds. Clear score.
-        for (int i = 0; i < idealXList.Count; i++)
-        {
-             scoreList.Add(Mathf.Sqrt(Mathf.Pow((Mathf.Abs(idealXList[i] - xPosList[i])), 2) + Mathf.Pow(Mathf.Abs(yPosList[i]), 2)));
-        }
-        score = 1000 - scoreList.Sum();
-        if (score < 0.0f)
-        {
-            score = 0.0f;
-        }
-        scoreText.text = score.ToString();
+        // Rest for 6 seconds.
+        DisplayScore();
         yield return new WaitForSeconds(6);
-        scoreText.text = "";
-        score = 0;
-        scoreList.Clear();
-        idealXList.Clear();
-        xPosList.Clear();
-        yPosList.Clear();
+        ClearScore();
 
         // End of trial.
         trialIndex++;
@@ -221,14 +221,17 @@ public class PlayerManager : MonoBehaviour {
 
     IEnumerator RightMove ()
     {
-        // Start right move.
+        // Start right move. Mark event in mocap data and EEG data.
         rightGoal.SetActive(true);
         rightLine.SetActive(true);
         rightMask.SetActive(true);
         moveActive = true;
         TextWriter writerRMS = new StreamWriter(filePath, true);
-        writerRMS.WriteLine("Trial " + trialIndex.ToString() + ": Right move started.");
+        writerRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT START");
         writerRMS.Close();
+        TextWriter writerEEGRMS = new StreamWriter(eegfilePath, true);
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT START");
+        writerEEGRMS.Close();
 
         // Move right mask to reveal right line for ~5.333... seconds.
         while (rightMask.transform.position.x < 24.5f)
@@ -240,16 +243,45 @@ public class PlayerManager : MonoBehaviour {
         // Reset right mask position.
         rightMask.transform.position = new Vector3(8.5f, 0.0f, 0.0f);
 
-        // End right move.
+        // End right move. Mark event in mocap data and EEG data.
         rightGoal.SetActive(false);
         rightLine.SetActive(false);
         rightMask.SetActive(false);
         moveActive = false;
         TextWriter writerRME = new StreamWriter(filePath, true);
-        writerRME.WriteLine("Trial " + trialIndex.ToString() + ": Right move ended.");
+        writerRME.Write("TRIAL " + trialIndex.ToString() + " RIGHT END");
         writerRME.Close();
+        TextWriter writerEEGRME = new StreamWriter(eegfilePath, true);
+        writerEEGRME.Write("TRIAL " + trialIndex.ToString() + " RIGHT END");
+        writerEEGRME.Close();
 
-        // Calculate and display score. Rest for 6 seconds. Clear score.
+        // Rest for 6 seconds.
+        DisplayScore();
+        yield return new WaitForSeconds(6);
+        ClearScore();
+
+        // End of trial.
+        trialIndex++;
+        trialActive = false;
+    }
+
+    void WriteHeader ()
+    {
+        TextWriter writer = new StreamWriter(@filePath, false);
+        writer.Write("TIME,FRAME,X POS,Y POS,EVENT,");
+        writer.Close();
+    }
+
+    void WriteData ()
+    {
+        TextWriter writer = new StreamWriter(filePath, true);
+        writer.WriteLine("");
+        writer.Write(Time.time + "," + Time.frameCount + "," + player.transform.position.x.ToString() + "," + player.transform.position.y.ToString() + ",");
+        writer.Close();
+    }
+
+    void DisplayScore ()
+    {
         for (int i = 0; i < idealXList.Count; i++)
         {
             scoreList.Add(Mathf.Sqrt(Mathf.Pow((Mathf.Abs(idealXList[i] - xPosList[i])), 2) + Mathf.Pow(Mathf.Abs(yPosList[i]), 2)));
@@ -260,30 +292,15 @@ public class PlayerManager : MonoBehaviour {
             score = 0.0f;
         }
         scoreText.text = score.ToString();
-        yield return new WaitForSeconds(6);
+    }
+
+    void ClearScore ()
+    {
         scoreText.text = "";
         score = 0;
         scoreList.Clear();
         idealXList.Clear();
         xPosList.Clear();
         yPosList.Clear();
-
-        // End of trial.
-        trialIndex++;
-        trialActive = false;
-    }
-
-    void WriteHeader ()
-    {
-        TextWriter writerH = new StreamWriter(@filePath, false);
-        writerH.Write("Time,Frame,X Pos,Y Pos");
-        writerH.Close();
-    }
-
-    void WriteData ()
-    {
-        TextWriter writerD = new StreamWriter(filePath, true);
-        writerD.WriteLine(Time.time + "," + Time.frameCount + "," + player.transform.position.x.ToString() + "," + player.transform.position.y.ToString());
-        writerD.Close();
     }
 }
