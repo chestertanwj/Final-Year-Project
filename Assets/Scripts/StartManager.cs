@@ -9,6 +9,8 @@ public class StartManager : MonoBehaviour {
     public InputField ageField;
     public Toggle maleToggle;
     public Toggle femaleToggle;
+    public Toggle fastToggle;
+    public Toggle slowToggle;
     public GameObject helpMenu;
     public GameObject registrationMenu;
 
@@ -34,6 +36,19 @@ public class StartManager : MonoBehaviour {
     public void InputAge()
     {
         PlayerPrefs.SetString("Age", ageField.text.ToString());
+    }
+
+    public void InputSpeed()
+    {
+        if (fastToggle.isOn)
+        {
+            PlayerPrefs.SetString("Speed", "FAST");
+        }
+        
+        if (slowToggle.isOn)
+        {
+            PlayerPrefs.SetString("Speed", "SLOW");
+        }
     }
 
     public void InputDone ()

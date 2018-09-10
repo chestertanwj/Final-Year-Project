@@ -28,7 +28,7 @@ public class CortexReceiver : MonoBehaviour {
         Debug.Log("CortexReceiver start.");
 
         // EEG data writing.
-        fileName = "Emotiv_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + ".csv";
+        fileName = "Emotiv_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + "_" + PlayerPrefs.GetString("Speed") + ".csv";
         fileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
         filePath = fileLocation + fileName;
 

@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 
 public class PlayerManager : MonoBehaviour {
 
+    // Public references.
     public GameObject player;
     public GameObject CortexReceiver;
 
@@ -21,7 +22,6 @@ public class PlayerManager : MonoBehaviour {
     public GameObject rightMask;
 
     public Text scoreText;
-
     private AudioSource audioSrc;
 
     // Trial management.
@@ -31,21 +31,22 @@ public class PlayerManager : MonoBehaviour {
     private bool trialActive;
     private bool moveActive;
     private List<int> trialList;
-
+    
     // Score management.
     private float score;
     private List<float> scoreList;
     private List<float> idealXList;
     private List<float> xPosList;
     private List<float> yPosList;
-
+    private float sessionScore;
+    
     // Mocap data writing.
-    private string fileName;
-    private string fileLocation;
-    private string filePath;
+    private string mocapFileName;
+    private string mocapFileLocation;
+    private string mocapFilePath;
 
     // EEG data writing.
-    string eegfilePath;
+    private string eegFilePath;
 
     // Debug.
     public Camera mainCamera;
@@ -54,10 +55,10 @@ public class PlayerManager : MonoBehaviour {
     void Start ()
     {
         // Mocap data writing.
-        fileName = "OptiTrack_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + ".csv";
-        fileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
-        filePath = fileLocation + fileName;
-        WriteHeader();
+        mocapFileName = "MOCAP_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + "_" + PlayerPrefs.GetString("Speed") + ".csv";
+        mocapFileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
+        mocapFilePath = mocapFileLocation + mocapFileName;
+        WriteMocapHeader();
 
         // Initial rest/loading phase.
         initRestOver = false;
@@ -65,7 +66,7 @@ public class PlayerManager : MonoBehaviour {
 
         // Trial management.
         trialIndex = 1;
-        trialTotal = 10;
+        trialTotal = 4;
         trialActive = false;
         moveActive = false;
         trialList = new List<int>();
@@ -86,6 +87,7 @@ public class PlayerManager : MonoBehaviour {
         idealXList = new List<float>();
         xPosList = new List<float>();
         yPosList = new List<float>();
+        sessionScore = 0;
 
         // Game object setting.
         centre.SetActive(false);
@@ -108,7 +110,7 @@ public class PlayerManager : MonoBehaviour {
         }   
 
         // Write mocap data at every frame.
-        WriteData();
+        WriteMocapData();
 
         // Score management.
         if (moveActive == true)
@@ -126,9 +128,9 @@ public class PlayerManager : MonoBehaviour {
         }
 
         // End session.
-        if (trialIndex == trialTotal)
+        if (trialIndex > trialTotal)
         {
-            scoreText.text = "END THANK YOU";
+            scoreText.text = "END: " + sessionScore;
         }
 
         // Return to start.
@@ -144,25 +146,26 @@ public class PlayerManager : MonoBehaviour {
     IEnumerator InitRest ()
     {
         scoreText.text = "LOADING";
-        yield return new WaitForSeconds(20);
+        yield return new WaitForSeconds(25);
         scoreText.text = "LOADED";
         yield return new WaitForSeconds(5);
         scoreText.text = "";
         initRestOver = true;
 
-        eegfilePath = CortexReceiver.GetComponent<CortexReceiver>().filePath;
+        eegFilePath = CortexReceiver.GetComponent<CortexReceiver>().filePath;
     }
 
     IEnumerator Trial ()
     {
+        // Start trial.
         trialActive = true;
-        audioSrc.Play();
 
         // Prepare for 5 seconds.
         centre.SetActive(true);
         yield return new WaitForSeconds(5);
         centre.SetActive(false);
         
+        // Start LeftMove or RightMove coroutine.
         if (trialList[trialIndex-1] <= (trialTotal/2))
         {
             StartCoroutine(LeftMove());
@@ -175,112 +178,166 @@ public class PlayerManager : MonoBehaviour {
 
     IEnumerator LeftMove ()
     {
-        // Start left move. Mark event in mocap data and EEG data.
+        // Let goal appear for 1 second before start left move.
+        audioSrc.Play();
         leftGoal.SetActive(true);
+        yield return new WaitForSeconds(1);
+
+        // Start left move.
         leftLine.SetActive(true);
         leftMask.SetActive(true);
         moveActive = true;
-        TextWriter writerLMS = new StreamWriter(filePath, true);
-        writerLMS.Write("TRIAL " + trialIndex.ToString() + " LEFT START");
-        writerLMS.Close();
-        TextWriter writerEEGLMS = new StreamWriter(eegfilePath, true);
-        writerEEGLMS.Write("TRIAL " + trialIndex.ToString() + " LEFT START");
-        writerEEGLMS.Close();
 
-        // Move left mask to reveal left line for ~5.333... seconds.
+        // Mark start left move event in mocap data and EEG data.
+        StartLeftMoveMarker();
+
+        // Move left mask from -8.5 to -24.5 to reveal left line.
         while (leftMask.transform.position.x > -24.5f)
         {
-            leftMask.transform.position += Vector3.left * 0.1f;
-            yield return new WaitForSeconds(0.02f);
+            if (PlayerPrefs.GetString("Speed") == "FAST")
+            {
+                leftMask.transform.position += Vector3.left * 0.08f;
+            }
+            else if (PlayerPrefs.GetString("Speed") == "SLOW")
+            {
+                leftMask.transform.position += Vector3.left * 0.04f;
+            }
+                
+            yield return null;
         }
 
         // Reset left mask position.
         leftMask.transform.position = new Vector3(-8.5f, 0.0f, 0.0f);
 
-        // End left move. Mark event in mocap data and EEG data.
+        // End left move.
+        audioSrc.Play();
         leftGoal.SetActive(false);
         leftLine.SetActive(false);
         leftMask.SetActive(false);
         moveActive = false;
-        TextWriter writerLME = new StreamWriter(filePath, true);
-        writerLME.Write("TRIAL " + trialIndex.ToString() + " LEFT END");
-        writerLME.Close();
-        TextWriter writerEEGLME = new StreamWriter(eegfilePath, true);
-        writerEEGLME.Write("TRIAL " + trialIndex.ToString() + " LEFT END");
-        writerEEGLME.Close();
 
-        // Rest for 6 seconds.
+        // Mark end left move event in mocap data and EEG data.
+        EndLeftMoveMarker();
+
+        // Rest for 6 seconds and display score.
         DisplayScore();
         yield return new WaitForSeconds(6);
         ClearScore();
 
-        // End of trial.
+        // End trial.
         trialIndex++;
         trialActive = false;
     }
 
     IEnumerator RightMove ()
     {
-        // Start right move. Mark event in mocap data and EEG data.
+        // Let goal appear for 1 second before start right move.
+        audioSrc.Play();
         rightGoal.SetActive(true);
+        yield return new WaitForSeconds(1);
+
+        // Start right move.
         rightLine.SetActive(true);
         rightMask.SetActive(true);
         moveActive = true;
-        TextWriter writerRMS = new StreamWriter(filePath, true);
-        writerRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT START");
-        writerRMS.Close();
-        TextWriter writerEEGRMS = new StreamWriter(eegfilePath, true);
-        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT START");
-        writerEEGRMS.Close();
 
-        // Move right mask to reveal right line for ~5.333... seconds.
+        // Mark start right move event in mocap data and EEG data.
+        StartRightMoveMarker();
+
+        // Move right mask from 8.5 to 24.5 to reveal right line.
         while (rightMask.transform.position.x < 24.5f)
         {
-            rightMask.transform.position += Vector3.right * 0.1f;
-            yield return new WaitForSeconds(0.02f);
+            if (PlayerPrefs.GetString("Speed") == "FAST")
+            {
+                rightMask.transform.position += Vector3.right * 0.08f;
+            }
+            else if (PlayerPrefs.GetString("Speed") == "SLOW")
+            {
+                rightMask.transform.position += Vector3.right * 0.04f;
+            }
+            
+            yield return null;
         }
 
         // Reset right mask position.
         rightMask.transform.position = new Vector3(8.5f, 0.0f, 0.0f);
 
-        // End right move. Mark event in mocap data and EEG data.
+        // End right move.
+        audioSrc.Play();
         rightGoal.SetActive(false);
         rightLine.SetActive(false);
         rightMask.SetActive(false);
         moveActive = false;
-        TextWriter writerRME = new StreamWriter(filePath, true);
-        writerRME.Write("TRIAL " + trialIndex.ToString() + " RIGHT END");
-        writerRME.Close();
-        TextWriter writerEEGRME = new StreamWriter(eegfilePath, true);
-        writerEEGRME.Write("TRIAL " + trialIndex.ToString() + " RIGHT END");
-        writerEEGRME.Close();
 
-        // Rest for 6 seconds.
+        // Mark end right move event in mocap data and EEG data.
+        EndRightMoveMarker();
+
+        // Rest for 6 seconds and display score.
         DisplayScore();
         yield return new WaitForSeconds(6);
         ClearScore();
 
-        // End of trial.
+        // End trial.
         trialIndex++;
         trialActive = false;
     }
 
-    void WriteHeader ()
+    void WriteMocapHeader ()
     {
-        TextWriter writer = new StreamWriter(@filePath, false);
-        writer.Write("TIME,FRAME,X POS,Y POS,EVENT,");
-        writer.Close();
+        TextWriter writerMocapHeader = new StreamWriter(@mocapFilePath, false);
+        writerMocapHeader.Write("TIME,FRAME,X POS,Y POS,EVENT,");
+        writerMocapHeader.Close();
     }
 
-    void WriteData ()
+    void WriteMocapData ()
     {
-        TextWriter writer = new StreamWriter(filePath, true);
-        writer.WriteLine("");
-        writer.Write(Time.time + "," + Time.frameCount + "," + player.transform.position.x.ToString() + "," + player.transform.position.y.ToString() + ",");
-        writer.Close();
+        TextWriter writerMocapData = new StreamWriter(mocapFilePath, true);
+        writerMocapData.WriteLine("");
+        writerMocapData.Write(Time.time + "," + Time.frameCount + "," + player.transform.position.x.ToString() + "," + player.transform.position.y.ToString() + ",");
+        writerMocapData.Close();
     }
 
-    void DisplayScore ()
+    void StartLeftMoveMarker ()
+    {
+        TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " START");
+        writerMocapRMS.Close();
+        TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " START");
+        writerEEGRMS.Close();
+    }
+
+    void EndLeftMoveMarker ()
+    {
+        TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " END");
+        writerMocapRMS.Close();
+        TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " END");
+        writerEEGRMS.Close();
+    }
+
+    void StartRightMoveMarker ()
+    {
+        TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " START");
+        writerMocapRMS.Close();
+        TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " START");
+        writerEEGRMS.Close();
+    }
+
+    void EndRightMoveMarker ()
+    {
+        TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " END");
+        writerMocapRMS.Close();
+        TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " END");
+        writerEEGRMS.Close();
+    }
+
+    void DisplayScore()
     {
         for (int i = 0; i < idealXList.Count; i++)
         {
@@ -291,10 +348,15 @@ public class PlayerManager : MonoBehaviour {
         {
             score = 0.0f;
         }
+        else
+        {
+            score = (float)Math.Round((double)(score / 10), 1);
+        }
+        sessionScore += score;
         scoreText.text = score.ToString();
     }
 
-    void ClearScore ()
+    void ClearScore()
     {
         scoreText.text = "";
         score = 0;
