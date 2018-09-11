@@ -413,7 +413,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WebSocketManager: {fileID: 95656238}
   CortexSender: {fileID: 949186507}
-  filePath: 
+  scoreText: {fileID: 61116257}
+  eegFilePath: 
   token: 
 --- !u!1 &524511730
 GameObject:

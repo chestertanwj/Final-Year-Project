@@ -4,6 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Polling to receive only responses from authorization, subscription and streaming.
 
@@ -12,14 +13,16 @@ public class CortexReceiver : MonoBehaviour {
     public GameObject WebSocketManager;
     public GameObject CortexSender;
 
+    public Text scoreText;
+
     WebSocket ws;
 
     string response;
     JObject Jresponse;
 
-    string fileName;
-    string fileLocation;
-    public string filePath;
+    string eegFileName;
+    string eegFileLocation;
+    public string eegFilePath;
 
     public string token;
 
@@ -28,9 +31,9 @@ public class CortexReceiver : MonoBehaviour {
         Debug.Log("CortexReceiver start.");
 
         // EEG data writing.
-        fileName = "Emotiv_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + "_" + PlayerPrefs.GetString("Speed") + ".csv";
-        fileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
-        filePath = fileLocation + fileName;
+        eegFileName = "EEG_" + DateTime.Now.ToString("dd-MM-yyyy_HH-mm-ss_") + PlayerPrefs.GetString("Gender") + PlayerPrefs.GetString("Age") + "_" + PlayerPrefs.GetString("Speed") + ".csv";
+        eegFileLocation = @"C:\Users\nrobinson\Desktop\Chester\";
+        eegFilePath = eegFileLocation + eegFileName;
 
         Debug.Log("Fetch websocket from WebSocketManager to CortexReceiver.");
         ws = WebSocketManager.GetComponent<WebSocketManager>().ws;
@@ -44,50 +47,107 @@ public class CortexReceiver : MonoBehaviour {
                 Jresponse = JObject.Parse(response);
                 Debug.Log("Response: " + Jresponse.ToString(Formatting.None));
 
+                // Response from Logout() request.
+                if (Int32.Parse(Jresponse["id"].ToString()) == 0)
+                {
+                    if (Jresponse.ToString().Contains("result"))
+                    {
+                        scoreText.text = "LOGGED OUT";
+                    }
+                    else if (Jresponse.ToString().Contains("error"))
+                    {
+                        scoreText.text = "ERROR";
+                    }
+                    
+                }
+
+                // Response from Login() request.
+                if (Int32.Parse(Jresponse["id"].ToString()) == 1)
+                {
+                    if (Jresponse.ToString().Contains("result"))
+                    {
+                        scoreText.text = "LOGGED IN";
+                    }
+                    else if (Jresponse.ToString().Contains("error"))
+                    {
+                        scoreText.text = "ERROR";
+                    }
+                }
+
                 // Response from Authorize() request.
                 // Get authentication token.
-                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 2)
+                if (Int32.Parse(Jresponse["id"].ToString()) == 2)
                 {
-                    token = Jresponse["result"]["_auth"].ToString();
+                    if (Jresponse.ToString().Contains("result"))
+                    {
+                        token = Jresponse["result"]["_auth"].ToString();
+                        scoreText.text = "AUTHORIZED";
+                    }
+                    else if (Jresponse.ToString().Contains("error"))
+                    {
+                        scoreText.text = "ERROR";
+                    }
+                }
+
+                // Response from CreateSession() request.
+                if (Int32.Parse(Jresponse["id"].ToString()) == 3)
+                {
+                    if (Jresponse.ToString().Contains("result"))
+                    {
+                        scoreText.text = "SESSION CREATED";
+                    }
+                    else if (Jresponse.ToString().Contains("error"))
+                    {
+                        scoreText.text = "ERROR";
+                    }
                 }
 
                 // Response from Subscribe() request.
-                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 4)
+                if (Int32.Parse(Jresponse["id"].ToString()) == 4)
                 {
-                    WriteHeader();
+                    if (Jresponse.ToString().Contains("result"))
+                    {
+                        WriteEEGHeader();
+
+                        scoreText.text = "SUBSCRIBED";
+                    }
+                    else if (Jresponse.ToString().Contains("error"))
+                    {
+                        scoreText.text = "ERROR";
+                    }
                 }
 
                 // Handle streaming EEG data.
                 if (!Jresponse.ToString().Contains("result") && Jresponse.ToString().Contains("eeg"))
                 {
-                    WriteData();
+                    WriteEEGData();
                 }
             }
             yield return null;
         }
     }
 
-    void WriteHeader ()
+    void WriteEEGHeader ()
     {
-        TextWriter writer = new StreamWriter(filePath, false);
-        writer.Write("TIME,FRAME,");
-        for (int i = 4; i < 17; i++)
+        TextWriter writerEEGHeader = new StreamWriter(eegFilePath, false);
+        writerEEGHeader.Write("TIME,FRAME,");
+        for (int i = 2; i < 17; i++)
         {
-            writer.Write(Jresponse["result"][0]["eeg"]["cols"][i].ToString() + ",");
+            writerEEGHeader.Write(Jresponse["result"][0]["eeg"]["cols"][i].ToString() + ",");
         }
-        writer.Write("EVENT,");
-        writer.Close();
+        writerEEGHeader.Write("EVENT,");
+        writerEEGHeader.Close();
     }
 
-    void WriteData ()
+    void WriteEEGData ()
     {
-        TextWriter writer = new StreamWriter(filePath, true);
-        writer.WriteLine("");
-        writer.Write(Time.time + "," + Time.frameCount + ",");
-        for (int i = 4; i < 17; i++)
+        TextWriter writerEEGdata = new StreamWriter(eegFilePath, true);
+        writerEEGdata.WriteLine("");
+        writerEEGdata.Write(Time.time + "," + Time.frameCount + ",");
+        for (int i = 2; i < 17; i++)
         {
-            writer.Write(Jresponse["eeg"][i].ToString() + ",");
+            writerEEGdata.Write(Jresponse["eeg"][i].ToString() + ",");
         }
-        writer.Close();
+        writerEEGdata.Close();
     }
 }

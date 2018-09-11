@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class StartManager : MonoBehaviour {
 
+    // Public references.
     public InputField ageField;
     public Toggle maleToggle;
     public Toggle femaleToggle;
@@ -14,12 +15,15 @@ public class StartManager : MonoBehaviour {
     public GameObject helpMenu;
     public GameObject registrationMenu;
 
+    // Initialisation.
     void Start ()
     {
+        // Game object setting.
         helpMenu.SetActive(false);
         registrationMenu.SetActive(false);
     }
 
+    // Gender toggle group.
     public void InputGender()
     {
         if (maleToggle.isOn)
@@ -33,11 +37,13 @@ public class StartManager : MonoBehaviour {
         }
     }
 
+    // Age field.
     public void InputAge()
     {
         PlayerPrefs.SetString("Age", ageField.text.ToString());
     }
 
+    // Game speed toggle group.
     public void InputSpeed()
     {
         if (fastToggle.isOn)

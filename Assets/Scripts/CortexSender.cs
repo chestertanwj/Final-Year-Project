@@ -53,6 +53,28 @@ public class CortexSender : MonoBehaviour {
         Subscribe();
     }
 
+    void Logout()
+    {
+        Debug.Log("Logout() called.");
+
+        JObject request = new JObject();
+        JProperty jsonrpc = new JProperty("jsonrpc", "2.0");
+        request.Add(jsonrpc);
+        JProperty method = new JProperty("method", "logout");
+        request.Add(method);
+
+        JObject param = new JObject();
+        JProperty username = new JProperty("username", this.username);
+        param.Add(username);
+        request.Add("params", param);
+
+        JProperty id = new JProperty("id", 0);
+        request.Add(id);
+
+        Debug.Log(request.ToString(Formatting.None));
+        ws.SendString(request.ToString());
+    }
+
     void Login()
     {
         Debug.Log("Login() called.");
@@ -75,28 +97,6 @@ public class CortexSender : MonoBehaviour {
         request.Add("params", param);
 
         JProperty id = new JProperty("id", 1);
-        request.Add(id);
-
-        Debug.Log(request.ToString(Formatting.None));
-        ws.SendString(request.ToString());
-    }
-
-    void Logout()
-    {
-        Debug.Log("Logout() called.");
-
-        JObject request = new JObject();
-        JProperty jsonrpc = new JProperty("jsonrpc", "2.0");
-        request.Add(jsonrpc);
-        JProperty method = new JProperty("method", "logout");
-        request.Add(method);
-
-        JObject param = new JObject();
-        JProperty username = new JProperty("username", this.username);
-        param.Add(username);
-        request.Add("params", param);
-
-        JProperty id = new JProperty("id", 0);
         request.Add(id);
 
         Debug.Log(request.ToString(Formatting.None));

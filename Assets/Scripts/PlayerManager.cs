@@ -66,7 +66,7 @@ public class PlayerManager : MonoBehaviour {
 
         // Trial management.
         trialIndex = 1;
-        trialTotal = 4;
+        trialTotal = 20;
         trialActive = false;
         moveActive = false;
         trialList = new List<int>();
@@ -127,13 +127,13 @@ public class PlayerManager : MonoBehaviour {
             idealXList.Add(rightMask.transform.position.x - 8.5f);
         }
 
-        // End session.
+        // End of session.
         if (trialIndex > trialTotal)
         {
-            scoreText.text = "END: " + sessionScore;
+            scoreText.text = "SESSION SCORE: " + sessionScore;
         }
 
-        // Return to start.
+        // Return to start scene.
         if (Input.GetKey(KeyCode.Escape))
         {
             SceneManager.LoadScene("Start");
@@ -145,14 +145,11 @@ public class PlayerManager : MonoBehaviour {
 
     IEnumerator InitRest ()
     {
-        scoreText.text = "LOADING";
-        yield return new WaitForSeconds(25);
-        scoreText.text = "LOADED";
-        yield return new WaitForSeconds(5);
+        yield return new WaitForSeconds(30);
         scoreText.text = "";
         initRestOver = true;
 
-        eegFilePath = CortexReceiver.GetComponent<CortexReceiver>().filePath;
+        eegFilePath = CortexReceiver.GetComponent<CortexReceiver>().eegFilePath;
     }
 
     IEnumerator Trial ()
@@ -176,6 +173,7 @@ public class PlayerManager : MonoBehaviour {
         }
     }
 
+    // Coroutine for left movement.
     IEnumerator LeftMove ()
     {
         // Let goal appear for 1 second before start left move.
@@ -229,6 +227,7 @@ public class PlayerManager : MonoBehaviour {
         trialActive = false;
     }
 
+    // Coroutine for right movement.
     IEnumerator RightMove ()
     {
         // Let goal appear for 1 second before start right move.
@@ -284,11 +283,11 @@ public class PlayerManager : MonoBehaviour {
 
     void WriteMocapHeader ()
     {
-        TextWriter writerMocapHeader = new StreamWriter(@mocapFilePath, false);
+        TextWriter writerMocapHeader = new StreamWriter(mocapFilePath, false);
         writerMocapHeader.Write("TIME,FRAME,X POS,Y POS,EVENT,");
         writerMocapHeader.Close();
     }
-
+    
     void WriteMocapData ()
     {
         TextWriter writerMocapData = new StreamWriter(mocapFilePath, true);
@@ -300,40 +299,40 @@ public class PlayerManager : MonoBehaviour {
     void StartLeftMoveMarker ()
     {
         TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
-        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " START");
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT START");
         writerMocapRMS.Close();
         TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
-        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " START");
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT START");
         writerEEGRMS.Close();
     }
 
     void EndLeftMoveMarker ()
     {
         TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
-        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " END");
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT END");
         writerMocapRMS.Close();
         TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
-        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT " + PlayerPrefs.GetString("Speed") + " END");
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " LEFT END");
         writerEEGRMS.Close();
     }
 
     void StartRightMoveMarker ()
     {
         TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
-        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " START");
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT START");
         writerMocapRMS.Close();
         TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
-        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " START");
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT START");
         writerEEGRMS.Close();
     }
 
     void EndRightMoveMarker ()
     {
         TextWriter writerMocapRMS = new StreamWriter(mocapFilePath, true);
-        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " END");
+        writerMocapRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT END");
         writerMocapRMS.Close();
         TextWriter writerEEGRMS = new StreamWriter(eegFilePath, true);
-        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT " + PlayerPrefs.GetString("Speed") + " END");
+        writerEEGRMS.Write("TRIAL " + trialIndex.ToString() + " RIGHT END");
         writerEEGRMS.Close();
     }
 
