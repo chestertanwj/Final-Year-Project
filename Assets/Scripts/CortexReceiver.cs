@@ -48,7 +48,7 @@ public class CortexReceiver : MonoBehaviour {
                 Debug.Log("Response: " + Jresponse.ToString(Formatting.None));
 
                 // Response from Logout() request.
-                if (Int32.Parse(Jresponse["id"].ToString()) == 0)
+                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 0)
                 {
                     if (Jresponse.ToString().Contains("result"))
                     {
@@ -62,7 +62,7 @@ public class CortexReceiver : MonoBehaviour {
                 }
 
                 // Response from Login() request.
-                if (Int32.Parse(Jresponse["id"].ToString()) == 1)
+                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 1)
                 {
                     if (Jresponse.ToString().Contains("result"))
                     {
@@ -76,7 +76,7 @@ public class CortexReceiver : MonoBehaviour {
 
                 // Response from Authorize() request.
                 // Get authentication token.
-                if (Int32.Parse(Jresponse["id"].ToString()) == 2)
+                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 2)
                 {
                     if (Jresponse.ToString().Contains("result"))
                     {
@@ -90,7 +90,7 @@ public class CortexReceiver : MonoBehaviour {
                 }
 
                 // Response from CreateSession() request.
-                if (Int32.Parse(Jresponse["id"].ToString()) == 3)
+                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 3)
                 {
                     if (Jresponse.ToString().Contains("result"))
                     {
@@ -103,7 +103,7 @@ public class CortexReceiver : MonoBehaviour {
                 }
 
                 // Response from Subscribe() request.
-                if (Int32.Parse(Jresponse["id"].ToString()) == 4)
+                if (Jresponse.ToString().Contains("result") && Int32.Parse(Jresponse["id"].ToString()) == 4)
                 {
                     if (Jresponse.ToString().Contains("result"))
                     {
@@ -131,7 +131,7 @@ public class CortexReceiver : MonoBehaviour {
     {
         TextWriter writerEEGHeader = new StreamWriter(eegFilePath, false);
         writerEEGHeader.Write("TIME,FRAME,");
-        for (int i = 2; i < 17; i++)
+        for (int i = 3; i < 17; i++)
         {
             writerEEGHeader.Write(Jresponse["result"][0]["eeg"]["cols"][i].ToString() + ",");
         }
@@ -144,7 +144,7 @@ public class CortexReceiver : MonoBehaviour {
         TextWriter writerEEGdata = new StreamWriter(eegFilePath, true);
         writerEEGdata.WriteLine("");
         writerEEGdata.Write(Time.time + "," + Time.frameCount + ",");
-        for (int i = 2; i < 17; i++)
+        for (int i = 3; i < 17; i++)
         {
             writerEEGdata.Write(Jresponse["eeg"][i].ToString() + ",");
         }
